@@ -41,20 +41,16 @@ class Controller {
 		return ob_get_clean();
 	}
 
-	protected function asset($fileName) {
-		return "assets/" . $fileName;
-	}
-
 	protected function css($fileName) {
-		return "<link href='" . $this->asset("css/" . $fileName) . "' rel='stylesheet'>";
+		return "<link href='assets/css/" . $fileName . "' rel='stylesheet'>";
 	}
 
 	protected function js($fileName) {
-		return "<script src='" . $this->asset("js/" . $fileName) . "'></script>";
+		return "<script src='assets/js/" . $fileName . "'></script>";
 	}
 
 	protected function url($route) {
-		return "/?r=" . urlencode($route);
+		return "?r=" . urlencode($route);
 	}
 
 	protected function goHome() {

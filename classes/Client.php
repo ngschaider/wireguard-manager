@@ -36,6 +36,10 @@ class Client {
         return $clients;
     }
 
+    private function generateQR() {
+
+    }
+
     private static function parseBlock($blockLines) {
         $client = new Client();
         foreach($blockLines as $line) {
@@ -43,12 +47,17 @@ class Client {
                 $client->name = substr($line, 3, strlen($line));
             } else if(strpos($line, "PublicKey") !== false) {
                 $pos = strpos($line, "=");
-                $client->publicKey = trim(substr($line, $pos));
+                $client->publicKey = trim(substr($line, $pos+1));
             } else if(substr($line, 0, 10) === "AllowedIPs") {
                $splits = explode("=", $line);
                $client->allowedIPs = trim($splits[1]);
            }
         }
+
+        if(!is_file(App::$app->basePath . "/assets/qr" . $client->name)) {
+            $client->generateQR();
+        }
+        
         return $client;
     }
 
