@@ -18,11 +18,16 @@
                 </div>
                 <div class="extra content">
                     <div class="ui two buttons">
-                        <input class="ui basic green button" type="button" value="Renew">
-                        <input class="ui basic red button" type="button" value="Delete">
+                        <a class="ui basic green button">Renew</a>
+                        <form method="post" action="<?= $this->url("client/delete") ?>">
+                            <input type="hidden" name="name" value="<?= $model->name ?>">
+                            <input class="ui basic red button" type="submit" value="Delete">
+                        </form>
                     </div>
                 </div>
             </div>
         <?php endforeach; ?>
     </div>
+
+    <a class="ui green button" href="<?= $this->url("client/create") ?>">Add</a>
 </div>

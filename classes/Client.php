@@ -6,59 +6,52 @@ class Client {
 
     public $name;
     public $publicKey;
+    public $privateKey;
     public $allowedIPs;
 
     public static function findAll() {
-        $content = file_get_contents(App::$app->basePath . "/output/wg0.conf");
-        $lines = explode("\n", $content);
-
         $clients = [];
-        $blockLines = [];
-        $insideOfBlock = false;
-        foreach($lines as $k => $v) {
-            $lines[$k] = trim($v);
-        }
-        foreach($lines as $line) {
-            if(substr($line, 0, 3) === "###") {
-                if($insideOfBlock) {
-                    $clients[] = $this->parseBlock($blockLines);
-                    $blockLines = [];
-                }
-                $insideOfBlock = true;
-            }
 
-            if($insideOfBlock) {
-                $blockLines[] = $line;
-            }
+        $config = FileHelper::getServerConfig();
+        $blocks = FileHelper::getBlocks($config);
+        foreach($blocks as $block) {
+            $clients[] = FileHelper::parseClientBlock($block);
         }
-        $clients[] = self::parseBlock($blockLines);
 
         return $clients;
     }
 
-    private function generateQR() {
+    public static function delete($name) {
+        $config = FileHelper::getServerConfig();
+        $newConfig = FileHelper::replaceBlock($config, $name, "");
+        FileHelper::setServerConfig($newConfig);
 
+        FileHelper::deleteClientFiles($name);
     }
 
-    private static function parseBlock($blockLines) {
-        $client = new Client();
-        foreach($blockLines as $line) {
-            if(substr($line, 0, 3) === "###") {
-                $client->name = substr($line, 3, strlen($line));
-            } else if(strpos($line, "PublicKey") !== false) {
-                $pos = strpos($line, "=");
-                $client->publicKey = trim(substr($line, $pos+1));
-            } else if(substr($line, 0, 10) === "AllowedIPs") {
-               $splits = explode("=", $line);
-               $client->allowedIPs = trim($splits[1]);
-           }
+    public function validate() {
+        if(!$this->name) {
+            return false;
+        }
+        if(!$this->allowedIPs) {
+            return false;
         }
 
-        if(!is_file(App::$app->basePath . "/assets/qr" . $client->name)) {
-            $client->generateQR();
-        }
-        
-        return $client;
+        return true;
+    }
+
+    public function save() {
+        FileHelper::createClientKeys($this->name);
+        $this->publicKey = FileHelper::getClientPublicKey($this->name);
+        $this->privateKey = FileHelper::getClientPrivateKey($this->name);
+
+
+        FileHelper::createClientConfig($this);
+        FileHelper::generateQR($this->name);
+
+        $config = FileHelper::getServerConfig();
+        $newConfig = FileHelper::addClient($config, $this);
+        FileHelper::setServerConfig($newConfig);
     }
 
 }
